@@ -1,2 +1,8 @@
-# love-quest-mongo-chat
-Valentine's Day-themed MongoDB Socket.io Chat SPA
+# LoveQuest
+## Valentine's Day-themed MongoDB Socket.io Chat SPA
+
+### Clone modules
+```npm install```
+
+### Run application
+```node server```
