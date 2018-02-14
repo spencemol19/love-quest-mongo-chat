@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Simple socket.io chat with MongoDB data store",
   "main": "server.js",
-  "repository": "git + https://github.com/spencemol19/love-quest-mongo-chat.git",
+  "repository": "https://github.com/spencemol19/love-quest-mongo-chat.git",
   "scripts": {
     "start": "node server.js"
   },
