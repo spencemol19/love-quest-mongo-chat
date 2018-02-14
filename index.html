@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#eeddee">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>LoveQuest</title>
+    <style>
+        .container {
+            padding-top: 30px;
+            padding-bottom: 30px;
+            text-align: center;
+        }
+        #messages {
+            text-align: left;
+            height: 300px;
+            padding: 10px 10px 20px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            background: #e9ecef;
+        }
+        #chat {
+            padding: 0 15px;
+        }
+        h1 {
+            color: #FF69B4;
+        }
+        .icon-container {
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+        .fa-map {
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: #ccc;
+        }
+        .fa-heart {
+            position: absolute;
+            z-index: 2;
+            width: 24px;
+            height: 24px;
+            font-size: 24px;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-65%, -75%);
+            transform: translate(-65%, -75%);
+        }
+        #username {
+            width: 50%;
+            margin: 0 auto;
+            text-align: center;
+            font-weight: 500;
+        }
+        input, textarea {
+            text-align: left;
+        }
+        textarea {
+            overflow-x: hidden;
+            position: relative;
+        }
+        .card {
+            position: relative;
+        }
+        #status {
+            bottom: 0;
+            left: 0;
+            position: absolute;
+            width: 100%;
+            opacity: 0;
+            -webkit-transition: all 0.2s linear, opacity 0.2s ease-in-out;
+            transition: all 0.2s linear, opacity 0.2s ease-in-out;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            display: block !important;
+            padding: 5px 0;
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+            color: #fff;
+        }
+        #status.success {
+            background: rgb(0, 128, 0);
+            background: rgba(0, 128, 0, 0.7);
+        }
+        #status.error {
+            background: rgb(139, 0, 0);
+            background: rgba(139, 0, 0, 0.7);
+        }
+        #status i {
+            vertical-align: middle;
+            display: inline-block;
+        }
+        .fa-check-circle {
+            color: rgb(0, 128, 0);
+        }
+        .fa-exclamation-circle {
+            color: rgb(139, 0, 0);
+        }
+        #status.active {
+            opacity: 1;
+        }
+        .chat-message {
+            padding: 10px 0;
+        }
+        .chat-message:first-of-type {
+            padding-top: 0;
+        }
+        .chat-message:last-of-type {
+            padding-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3 col-sm-12">
+                <h1 class="text-center">
+                    <div class="icon-container">
+                        <i class="fa fa-map"></i>
+                        <i class="fa fa-heart"></i>
+                    </div>
+                    LoveQuest
+                </h1>
+                <div id="chat">
+                    <input type="text" id="username" class="form-control" placeholder="Enter name"/>
+                    <br/>
+                    <div class="card">
+                        <div id="messages" class="card-block"></div>
+                        <div id="status"></div>
+                    </div>
+                    <br/>
+                    <form id="message-text">
+                        <textarea id="textarea" class="form-control" placeholder="Enter message..."></textarea>
+                    </form>
+                    <br/>
+                    <button id="clear" disabled="disabled" class="btn btn-danger">Clear Messages</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+    <script>
+        (function(){
+            var element = function(id){
+                return document.getElementById(id);
+            };
+
+            // Get elements
+            var status = element('status');
+            var messages = element('messages');
+            var messageText = element('message-text');
+            var textarea = element('textarea');
+            var username = element('username');
+
+            // if url is prepopulated
+            (function(){
+                if (window.location.search.indexOf("?username=") > -1) {
+                    var nameVal = window.location.search.split("=")[1];
+                    // if spaces, remove encoded spaces
+                    if (nameVal.indexOf('%20') > -1) {
+                        nameVal = nameVal.replace(/%20/g, ' ');
+                    }
+                    username.value = nameVal;
+                    username.setAttribute("disabled", "disabled");
+                    textarea.focus();
+                } else {
+                    username.focus();
+                }
+            })();
+
+            var clearBtn = element('clear');
+
+            // Set default status
+            var statusDefault = status.textContent;
+
+            var setDefaultMessage = function(){
+                messages.textContent = "Add a message below to get started...";
+            };
+
+            var clearMessages = function(){
+                messages.textContent = "";
+            };
+
+            var setStatus = function(s){
+                if (s) {
+                    if (s === "Message sent" || s === "Messages successsfully cleared") {
+                        status.innerHTML = `${s} <i class="fa fa-check-circle"></i>`;
+                        status.className = "card active success";
+                    } else {
+                        status.innerHTML = `${s} <i class="fa fa-exclamation-circle"></i>`;
+                        status.className = "card active error";
+                    }
+                } else if (status.className.indexOf('active') > -1) {
+                    status.className = "";
+
+                    // allow enough time for ease-out animation to occur before resetting
+                    setTimeout(function() {
+                        status.textContent = s;
+                    }, 250);
+                } else {
+                    status.textContent = s;
+                }
+
+                if(s !== statusDefault) {
+                    var delay = setTimeout(function() {
+                        setStatus(statusDefault);
+                    }, 4000);
+                }
+            };
+
+            // Connect to socket.io
+            var socket = io.connect('http://127.0.0.1:4200');
+
+            // Check for connection
+
+            if(socket) {
+                console.log('Connected to socket...');
+
+                socket.on('output', function(data){
+                    if (messages.textContent === 'Add a message below to get started...') {
+                        clearMessages();
+                    }
+                    if (data.length) {
+                        data.forEach(function(mes, index) {
+                            // Build out message div
+                            var message = document.createElement('div');
+                            message.setAttribute('class', 'chat-message');
+                            message.innerHTML = `<b>${mes.name}</b>: ${mes.message}`;
+                            messages.appendChild(message);
+                        });
+                        messages.lastChild.scrollIntoView();
+                        clearBtn.removeAttribute("disabled");
+                    } else {
+                        setDefaultMessage();
+                    }
+                });
+
+                // Get status from server
+                socket.on('status', function(data) {
+                    // get message status
+                    setStatus((typeof data === 'object') ? data.message : data);
+
+                    // If status is clear, clear text
+                    if (data.clear){
+                        textarea.value = '';
+                    }
+                });
+
+                // Handle input
+                textarea.addEventListener('keydown', function(e){
+                    if (event.which === 13 && event.shiftKey == false) {
+                        // Emit to server input
+                        socket.emit('input', {
+                            name: username.value,
+                            message: textarea.value
+                        });
+
+                        e.preventDefault();
+                    }
+                });
+
+                // Handle enter on mobile browsers
+                messageText.addEventListener('submit', function(e){
+                    // Emit to server input
+                    socket.emit('input', {
+                        name: username.value,
+                        message: textarea.value
+                    });
+                    
+                    e.preventDefault();
+                });
+
+                // Handle chat clear
+                clearBtn.addEventListener('click', function() {
+                    socket.emit('clear');
+                });
+
+                // Clear Message
+                socket.on('cleared', function(){
+                    clearMessages();
+                    clearBtn.setAttribute("disabled", "disabled");
+                    setDefaultMessage();
+                    setStatus("Messages successsfully cleared");
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

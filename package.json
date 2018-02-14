@@ -1,0 +1,18 @@
+{
+  "name": "mongo-chat",
+  "version": "1.0.0",
+  "description": "Simple socket.io chat with MongoDB data store",
+  "main": "server.js",
+  "repository": "git + https://github.com/spencemol19/love-quest-mongo-chat.git",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Spencer Moulton",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "http": "0.0.0",
+    "mongodb": "^2.2.33",
+    "socket.io": "^2.0.4"
+  }
+}
