@@ -4,8 +4,10 @@ const app = express();
 const server = require('http').createServer(app);
 const client = require('socket.io')(server);
 
-// connect to mongo
-mongo.connect('mongodb://spencerm:bradfordboy@ds235418.mlab.com:35418/plugwin-vi-test', function(err, db) {
+const { MONGO_URI } = require('./config.js');
+
+// connect to mongodb
+mongo.connect(MONGO_URI, function(err, db) {
     if (err) {
         throw err;
     }
