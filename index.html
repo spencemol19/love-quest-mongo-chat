@@ -23,7 +23,7 @@
         #messages {
             text-align: left;
             height: 300px;
-            padding: 10px 10px 20px;
+            padding: 20px 10px;
             overflow-x: hidden;
             overflow-y: auto;
             background: #e9ecef;
@@ -112,6 +112,9 @@
         .fa-exclamation-circle {
             color: rgb(139, 0, 0);
         }
+        #clear {
+            margin-bottom: 25px;
+        }
         #status.active {
             opacity: 1;
         }
@@ -140,6 +143,8 @@
                 <div id="chat">
                     <input type="text" id="username" class="form-control" placeholder="Enter name"/>
                     <br/>
+                    <button id="clear" disabled="disabled" class="btn btn-danger">Clear Messages</button>
+                    <br/>
                     <div class="card">
                         <div id="messages" class="card-block"></div>
                         <div id="status"></div>
@@ -148,8 +153,6 @@
                     <form id="message-text">
                         <textarea id="textarea" class="form-control" placeholder="Enter message..."></textarea>
                     </form>
-                    <br/>
-                    <button id="clear" disabled="disabled" class="btn btn-danger">Clear Messages</button>
                 </div>
             </div>
         </div>
@@ -168,6 +171,7 @@
             var messageText = element('message-text');
             var textarea = element('textarea');
             var username = element('username');
+            var clearBtn = element('clear');
 
             // if url is prepopulated
             (function(){
@@ -177,21 +181,23 @@
                     if (nameVal.indexOf('%20') > -1) {
                         nameVal = nameVal.replace(/%20/g, ' ');
                     }
+                    if (nameVal.indexOf('pence') === -1) {
+                        clearBtn.remove();
+                    }
                     username.value = nameVal;
                     username.setAttribute("disabled", "disabled");
                     textarea.focus();
                 } else {
+                    clearBtn.remove();
                     username.focus();
                 }
             })();
-
-            var clearBtn = element('clear');
 
             // Set default status
             var statusDefault = status.textContent;
 
             var setDefaultMessage = function(){
-                messages.textContent = "Add a message below to get started...";
+                messages.textContent = "Add a message below to get the conversation started...";
             };
 
             var clearMessages = function(){
@@ -224,17 +230,19 @@
                     }, 4000);
                 }
             };
-
+            
+            const generateNewManager = function() {
+                return new io('http://127.0.0.1:4200', {forceNew: true});
+            };
             // Connect to socket.io
-            var socket = io.connect('http://127.0.0.1:4200');
+            const socket = generateNewManager();
 
             // Check for connection
-
             if(socket) {
                 console.log('Connected to socket...');
 
                 socket.on('output', function(data){
-                    if (messages.textContent === 'Add a message below to get started...') {
+                    if (messages.textContent === 'Add a message below to get the conversation started...') {
                         clearMessages();
                     }
                     if (data.length) {
